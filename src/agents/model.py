@@ -11,8 +11,8 @@ class FullyConnectedNetwork(nn.Module):
     def __init__(self,
                  state_size: int,
                  action_size: int,
-                 hidden_dims: Sequence,
-                 seed: int):
+                 hidden_dims: Sequence[int],
+                 seed: int = 0):
         super().__init__()
         self._seed: int = seed
         self._network = nn.Sequential(
