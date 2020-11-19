@@ -14,9 +14,9 @@ class ReplayBuffer:
                  buffer_size: int,
                  batch_size: int,
                  seed: int = 0):
-        self._batch_size: int = batch_size
-        self._seed: int = seed
-        self._buffer: Deque = deque(buffer_size)
+        self.batch_size: int = batch_size
+        self.seed: int = seed
+        self.buffer: Deque = deque(maxlen=buffer_size)
     
 
     def add(self, 
@@ -26,12 +26,12 @@ class ReplayBuffer:
             next_state: ndarray,
             done: bool) -> None:
         experience = self.Experience(state, action, reward, next_state, done)
-        self._buffer.append(experience)
+        self.buffer.append(experience)
     
 
     def sample(self) -> ExperienceBatch:
         idc: List[int] = [np.random.randint(len(self.buffer) - 1) for _ in range(self.batch_size)]
-        experiences: List[self.Experience] = [self._buffer[idx] for idx in idc]
+        experiences: List[self.Experience] = [self.buffer[idx] for idx in idc]
 
         states = torch.from_numpy(np.vstack([exp.state for exp in experiences])).float().to(DEVICE)
         actions = torch.from_numpy(np.vstack([exp.action for exp in experiences])).long().to(DEVICE)
@@ -43,10 +43,10 @@ class ReplayBuffer:
 
 
     def __len__(self) -> int:
-        return len(self._buffer)
+        return len(self.buffer)
 
 
     def empty(self) -> None:
-        self._buffer.clear()
+        self.buffer.clear()
 
 

@@ -23,10 +23,10 @@ class DQNAgent:
         self.action_size: int = action_size
         self.seed: int = seed   
 
-        self.Q_target = FullyConnectedNetwork(state_size, action_size, hidden_dims)
-        self.Q_local = FullyConnectedNetwork(state_size, action_size, hidden_dims)
+        self.Q_target = FullyConnectedNetwork(state_size, action_size, hidden_dims).to(DEVICE)
+        self.Q_local = FullyConnectedNetwork(state_size, action_size, hidden_dims).to(DEVICE)
         self.optimizer = torch.optim.Adam(self.Q_local.parameters(), lr=LR)
-        self.buffer = ReplayBuffer(buffer_size, batch_size)
+        self.buffer = ReplayBuffer(int(buffer_size), batch_size)
         self.batch_size = batch_size
 
         self.time_step = 0
@@ -74,15 +74,15 @@ class DQNAgent:
     def _update_Q_target(self) -> None:
         self.Q_target.load_state_dict(self.Q_local.state_dict())
 
-    def act(self, state: ndarray) -> int:
+    def act(self, state: ndarray, is_trainng: bool = True) -> int:
         state: Tensor = torch.from_numpy(state).float().unsqueeze(0).to(DEVICE)
         with torch.no_grad():
             Qs: Tensor = self.Q_local(state)
 
-        if np.random.uniform() > self.eps:
-            return Qs.argmax().item()
-        else:
+        if is_trainng and np.random.uniform() <= self.eps:
             return np.random.randint(self.action_size)
+        else:
+            return Qs.argmax().item()
 
 
 
