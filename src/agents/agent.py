@@ -11,10 +11,14 @@ BUFFER_SIZE = 1e5
 BATCH_SIZE = 64
 GAMMA = 0.99
 TAU = 1e-3
-TARGET_NET_UPDATE_FREQ = 4
+UPDATE_FREQ = 4
 
 class DQNAgent:
-    def __init__(self, state_size: int, action_size: int, hidden_dims: Sequence[int], seed: int):
+    def __init__(self,
+                 state_size: int, action_size: int, buffer_size: int = BUFFER_SIZE,
+                 hidden_dims: Sequence[int] = [64,64], update_freq = UPDATE_FREQ, tau = TAU,
+                 lr: float = LR, batch_size: int = BATCH_SIZE, gamma:float = GAMMA,
+                 seed: int = 42):
         self.state_size: int = state_size
         self.action_size: int = action_size
         self.seed: int = seed   
@@ -22,24 +26,36 @@ class DQNAgent:
         self.Q_target = FullyConnectedNetwork(state_size, action_size, hidden_dims)
         self.Q_local = FullyConnectedNetwork(state_size, action_size, hidden_dims)
         self.optimizer = torch.optim.Adam(self.Q_local.parameters(), lr=LR)
+        self.buffer = ReplayBuffer(buffer_size, batch_size)
+        self.batch_size = batch_size
 
-        self.buffer = ReplayBuffer(BUFFER_SIZE, BATCH_SIZE)
-        self.time_step = 0  
+        self.time_step = 0
+        self.lr = lr
+        self.gamma = gamma
+        self.update_freq = update_freq
+        self.tau = tau
 
+        # exponential decay of epsilons
+        self.eps = 1
+        self.eps_min = 0.1
+        self.eps_decay = 0.9995
 
     def step(self,
             state: ndarray, 
             action: int, 
-            next_state: ndarray,
             reward: float,
+            next_state: ndarray,
             done: bool) -> None:
         self.time_step += 1
-        self.buffer.add(state, action, next_state, reward, done)
+        self._update_eps()
+        self.buffer.add(state, action, reward, next_state, done)
         
-        if len(self.buffer) > BATCH_SIZE:
+        if len(self.buffer) > self.batch_size:
             experiences = self.buffer.sample()
             self._learn(experiences)
     
+    def _update_eps(self):
+        self.eps = max(self.eps_min, self.eps * self.eps_decay)
 
     def _learn(self, experiences: ExperienceBatch) -> None:
         states, actions, rewards, next_states, dones = experiences
@@ -52,18 +68,18 @@ class DQNAgent:
         loss.backward()
         self.optimizer.step()
 
-        if self.time_step % TARGET_NET_UPDATE_FREQ == 0:
+        if self.time_step % self.update_freq == 0:
             self._update_Q_target()
 
     def _update_Q_target(self) -> None:
         self.Q_target.load_state_dict(self.Q_local.state_dict())
 
-    def act(self, state: ndarray, eps=0) -> int:
+    def act(self, state: ndarray) -> int:
         state: Tensor = torch.from_numpy(state).float().unsqueeze(0).to(DEVICE)
         with torch.no_grad():
             Qs: Tensor = self.Q_local(state)
 
-        if np.random.uniform() > eps:
+        if np.random.uniform() > self.eps:
             return Qs.argmax().item()
         else:
             return np.random.randint(self.action_size)
