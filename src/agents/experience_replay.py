@@ -8,7 +8,7 @@ class ReplayBuffer:
     """
     Most basic experience replay buffer, samples uniformly with replacement
     """
-    Experience = namedtuple('Experience', ['state', 'action', 'next_state', 'reward', 'done'])
+    Experience = namedtuple('Experience', ['state', 'action', 'reward', 'next_state', 'done'])
 
     def __init__(self,
                  buffer_size: int,
@@ -22,10 +22,10 @@ class ReplayBuffer:
     def add(self, 
             state: ndarray, 
             action: int, 
-            next_state: ndarray,
             reward: float,
+            next_state: ndarray,
             done: bool) -> None:
-        experience = self.Experience(state, action, next_state, reward, done)
+        experience = self.Experience(state, action, reward, next_state, done)
         self._buffer.append(experience)
     
 
