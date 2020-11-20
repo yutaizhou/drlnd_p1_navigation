@@ -1,8 +1,10 @@
-from os import stat
 from unityagents import UnityEnvironment
 import numpy as np
+import matplotlib.pyplot as plt
+import torch
 
 from src.agents.agent import DQNAgent
+from src.utils.typing import List
 
 
 def rollout(agent, env: UnityEnvironment, is_training: bool = True):
@@ -25,7 +27,7 @@ def rollout(agent, env: UnityEnvironment, is_training: bool = True):
     return total_reward
 
 
-def run(agent, env: UnityEnvironment, num_episodes=10000, is_training=True):
+def run(agent, env: UnityEnvironment, num_episodes=10000, is_training=True) -> List[float]:
     scores = []
     max_avg_score = -np.inf
 
@@ -40,7 +42,10 @@ def run(agent, env: UnityEnvironment, num_episodes=10000, is_training=True):
             
             if i_episode % 100 == 0:
                 print(f'Episode {i_episode}/{num_episodes} | Max Average Score: {max_avg_score}')
+            if max_avg_score >= 13:
+                print(f'Task solved in {i_episode} episodes, with average score over the last 100 episode: {max_avg_score}')
     
+    torch.save(agent.Q_local.state_dict(), 'checkpoint.pth')    
     return scores
 
 
@@ -57,6 +62,11 @@ if __name__ == "__main__":
     agent = DQNAgent(state_size, action_size)
     scores = run(agent, env, num_episodes=2000)
 
-
-
-
+    # plot the scores
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    plt.plot(np.arange(len(scores)), scores)
+    plt.ylabel('Score')
+    plt.xlabel('Episode #')
+    fig.savefig('result.png')
+    plt.close(fig)
