@@ -6,6 +6,7 @@ from src.agents.agent import DQNAgent
 
 
 def rollout(agent, env: UnityEnvironment, is_training: bool = True):
+    # completes one episode of rollout, is_training functionality not really fully fledged out
     env_info = env.reset(train_mode=True)[brain_name] 
     
     state = env_info.vector_observations[0]
@@ -35,7 +36,7 @@ def run(agent, env: UnityEnvironment, num_episodes=10000, is_training=True):
         if is_training:
             if len(scores) > 100:
                 avg_score = np.mean(scores[-100:])
-                if avg_score > max_avg_score: max_avg_score = avg_score
+                max_avg_score = max(max_avg_score, avg_score)
             
             if i_episode % 100 == 0:
                 print(f'Episode {i_episode}/{num_episodes} | Max Average Score: {max_avg_score}')
@@ -54,8 +55,7 @@ if __name__ == "__main__":
     state_size = len(env_info.vector_observations[0])
 
     agent = DQNAgent(state_size, action_size)
-
-    scores = run(agent, env)
+    scores = run(agent, env, num_episodes=2000)
 
 
 

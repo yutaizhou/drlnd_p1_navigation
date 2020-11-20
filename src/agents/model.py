@@ -6,7 +6,7 @@ from ..utils.typing import Sequence, Tensor
 
 class FullyConnectedNetwork(nn.Module):
     """
-    Maps state to Q values of each action 
+    Maps 1D vector state to Q values of each action using simple feed forward net
     """
     def __init__(self,
                  state_size: int,
@@ -14,7 +14,7 @@ class FullyConnectedNetwork(nn.Module):
                  hidden_dims: Sequence[int],
                  seed: int = 0):
         super().__init__()
-        self._seed: int = seed
+        self._seed = seed
         self._network = nn.Sequential(
             nn.Linear(state_size, hidden_dims[0]),
             nn.ReLU(),

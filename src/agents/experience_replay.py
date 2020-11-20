@@ -30,6 +30,8 @@ class ReplayBuffer:
     
 
     def sample(self) -> ExperienceBatch:
+        # idc: indices of the interaction samples to be retrieved from buffer, chosen uniformly at random
+        # expereinces: the actual interaction samples retrieved from buffer via idc 
         idc: List[int] = [np.random.randint(len(self.buffer) - 1) for _ in range(self.batch_size)]
         experiences: List[self.Experience] = [self.buffer[idx] for idx in idc]
 
