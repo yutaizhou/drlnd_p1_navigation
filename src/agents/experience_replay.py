@@ -51,4 +51,9 @@ class ReplayBuffer:
     def empty(self) -> None:
         self.buffer.clear()
 
+class PrioritizedReplayBuffer(ReplayBuffer):
+    """
+    Experience buffer that samples according to TD-error priority
+    """
+    pass
 

@@ -96,7 +96,11 @@ class DQNAgent:
         else:
             return Qs.argmax().item()
 
-class DoubleDQNAgent(DQNAgent):
+
+class DDQNAgent(DQNAgent):
+    """
+    Double DQN: Same as DQNAgent but uses double q-learning update
+    """
     def _learn(self, experiences: ExperienceBatch) -> None:
         # use Q_local to select action, use Q_target to evaluate
         states, actions, rewards, next_states, dones = experiences
@@ -115,3 +119,10 @@ class DoubleDQNAgent(DQNAgent):
         # update target Q network 
         if self.time_step % self.update_freq == 0:
             self._update_Q_target()
+
+
+class D3QN(DDQNAgent):
+    """
+    Dueling + Double DQN: Same as DDQN but with dueling neural net architecture
+    """
+    pass

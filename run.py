@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 
-from src.agents.agent import DQNAgent, DoubleDQNAgent
+from src.agents.agent import DQNAgent, DDQNAgent
 from src.utils.typing import List
 
 
