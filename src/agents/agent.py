@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 from .experience_replay import ReplayBuffer
-from .model import FullyConnectedNetwork
+from .model import FullyConnectedNetwork, FullyConnectedDuelingNetwork
 from ..utils.typing import Sequence, ndarray, Tensor, ExperienceBatch
 from ..utils.util import DEVICE
 
@@ -125,4 +125,13 @@ class D3QN(DDQNAgent):
     """
     Dueling + Double DQN: Same as DDQN but with dueling neural net architecture
     """
-    pass
+    def __init__(self,
+                 state_size: int, action_size: int, buffer_size: int = BUFFER_SIZE,
+                 hidden_dims: Sequence[int] = [64,64], update_freq: int = UPDATE_FREQ, 
+                 lr: float = LR, batch_size: int = BATCH_SIZE, gamma:float = GAMMA,
+                 seed: int = 42):
+        super().__init__(state_size, action_size, buffer_size, hidden_dims, update_freq,\
+            lr, batch_size, gamma, seed)
+        self.Q_target = FullyConnectedDuelingNetwork(state_size, action_size, hidden_dims, seed).to(DEVICE)
+        self.Q_local = FullyConnectedDuelingNetwork(state_size, action_size, hidden_dims, seed).to(DEVICE)
+        self.optimizer = torch.optim.Adam(self.Q_local.parameters(), lr=LR)
