@@ -13,7 +13,7 @@ GAMMA = 0.99
 TAU = 1e-3
 UPDATE_FREQ = 4
 
-class DQNAgent:
+class DQN:
     """
     Basic Deep Q-Learning Agent with target network updated by coping, and uniform replay buffer
     """
@@ -42,7 +42,7 @@ class DQNAgent:
         # exponential decay of epsilons
         self.eps = 1
         self.eps_min = 0.1
-        self.eps_decay = 0.9995
+        self.eps_decay = 0.998
 
     def step(self,
             state: ndarray, 
@@ -52,7 +52,8 @@ class DQNAgent:
             done: bool) -> None:
         # schedule eps for exploration, add interaction sample to buffer, and learn from buffer experience
         self.time_step += 1
-        self._update_eps()
+        if done: 
+            self._update_eps()
         self.buffer.add(state, action, reward, next_state, done)
         
         if len(self.buffer) > self.batch_size:
@@ -96,8 +97,10 @@ class DQNAgent:
         else:
             return Qs.argmax().item()
 
+    def __str__(self) -> str:
+        return 'DQN'
 
-class DDQNAgent(DQNAgent):
+class DDQN(DQN):
     """
     Double DQN: Same as DQNAgent but uses double q-learning update
     """
@@ -120,8 +123,10 @@ class DDQNAgent(DQNAgent):
         if self.time_step % self.update_freq == 0:
             self._update_Q_target()
 
+    def __str__(self) -> str:
+        return 'DDQN'
 
-class D3QN(DDQNAgent):
+class D3QN(DDQN):
     """
     Dueling + Double DQN: Same as DDQN but with dueling neural net architecture
     """
@@ -135,3 +140,6 @@ class D3QN(DDQNAgent):
         self.Q_target = FullyConnectedDuelingNetwork(state_size, action_size, hidden_dims, seed).to(DEVICE)
         self.Q_local = FullyConnectedDuelingNetwork(state_size, action_size, hidden_dims, seed).to(DEVICE)
         self.optimizer = torch.optim.Adam(self.Q_local.parameters(), lr=LR)
+
+    def __str__(self) -> str:
+        return 'D3QN'
