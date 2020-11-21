@@ -1,10 +1,11 @@
-from unityagents import UnityEnvironment
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
+from unityagents import UnityEnvironment
 
 from src.agents.agent import DQN, DDQN, D3QN
 from src.utils.typing import List
+from src.utils.util import Logger
 
 
 def rollout(agent, env: UnityEnvironment, is_training: bool = True):
@@ -32,8 +33,8 @@ def run(agent, env: UnityEnvironment, num_episodes=10000, is_training=True) -> L
     max_avg_score = -np.inf
     solved = False
 
-    log_file = open(f'results/{agent}/progress.log', mode='w')
-    print(f'Progress for {agent} agent', file=log_file)
+    logger = Logger(f'results/{agent}/progress.txt')
+    logger.write(f'Progress for {agent} agent\n')
     for i_episode in range(1, num_episodes+1):
         total_reward = rollout(agent, env, is_training)
         scores.append(total_reward)
@@ -44,12 +45,12 @@ def run(agent, env: UnityEnvironment, num_episodes=10000, is_training=True) -> L
                 max_avg_score = max(max_avg_score, avg_score)
             
             if i_episode % 100 == 0:
-                print(f'Episode {i_episode}/{num_episodes} | Max Average Score: {max_avg_score}', file=log_file)
+                logger.write(f'Episode {i_episode}/{num_episodes} | Max Average Score: {max_avg_score}\n')
             if max_avg_score >= 13 and not solved:
-                print(f'Task solved in {i_episode} episodes, with average score over the last 100 episode: {max_avg_score}', file=log_file)
+                logger.write(f'Task solved in {i_episode} episodes, with average score over the last 100 episode: {max_avg_score}\n')
                 solved = True
 
-    log_file.close()
+    logger.close()
     torch.save(agent.Q_local.state_dict(), f'results/{agent}/checkpoint.pth')
     with open(f'results/{agent}/scores.npy', 'wb') as f:
         np.save(f, scores)
