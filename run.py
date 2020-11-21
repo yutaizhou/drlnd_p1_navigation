@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 
-from src.agents.agent import DQNAgent, DDQNAgent, D3QN
+from src.agents.agent import DQN, DDQN, D3QN
 from src.utils.typing import List
 
 
@@ -30,7 +30,10 @@ def rollout(agent, env: UnityEnvironment, is_training: bool = True):
 def run(agent, env: UnityEnvironment, num_episodes=10000, is_training=True) -> List[float]:
     scores = []
     max_avg_score = -np.inf
+    solved = False
 
+    log_file = open(f'results/{agent}/progress.log', mode='w')
+    print(f'Progress for {agent} agent', file=log_file)
     for i_episode in range(1, num_episodes+1):
         total_reward = rollout(agent, env, is_training)
         scores.append(total_reward)
@@ -41,11 +44,16 @@ def run(agent, env: UnityEnvironment, num_episodes=10000, is_training=True) -> L
                 max_avg_score = max(max_avg_score, avg_score)
             
             if i_episode % 100 == 0:
-                print(f'Episode {i_episode}/{num_episodes} | Max Average Score: {max_avg_score}')
-            if max_avg_score >= 13:
-                print(f'Task solved in {i_episode} episodes, with average score over the last 100 episode: {max_avg_score}')
-    
-    torch.save(agent.Q_local.state_dict(), 'checkpoint.pth')    
+                print(f'Episode {i_episode}/{num_episodes} | Max Average Score: {max_avg_score}', file=log_file)
+            if max_avg_score >= 13 and not solved:
+                print(f'Task solved in {i_episode} episodes, with average score over the last 100 episode: {max_avg_score}', file=log_file)
+                solved = True
+
+    log_file.close()
+    torch.save(agent.Q_local.state_dict(), f'results/{agent}/checkpoint.pth')
+    with open(f'results/{agent}/scores.npy', 'wb') as f:
+        np.save(f, scores)
+
     return scores
 
 
@@ -59,9 +67,8 @@ if __name__ == "__main__":
     action_size = brain.vector_action_space_size
     state_size = len(env_info.vector_observations[0])
 
-    # agent = DQNAgent(state_size, action_size)
-    agent = DDQNAgent(state_size, action_size)
-    # agent = D3QN(state_size, action_size)
+    algorithm = DQN
+    agent = algorithm(state_size, action_size)
 
     scores = run(agent, env, num_episodes=2000)
 
@@ -71,5 +78,5 @@ if __name__ == "__main__":
     plt.plot(np.arange(len(scores)), scores)
     plt.ylabel('Score')
     plt.xlabel('Episode #')
-    fig.savefig('result.png')
+    fig.savefig(f'results/{agent}/result.png')
     plt.close(fig)
