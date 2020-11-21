@@ -66,6 +66,7 @@ class DQNAgent:
         # compute TD target, retrieve current TD values
         states, actions, rewards, next_states, dones = experiences
         target_nexts, _ = self.Q_target(next_states).detach().max(1,keepdim=True)
+        
         targets = rewards + (1-dones) * GAMMA * target_nexts
         currents = self.Q_local(states).gather(1, actions)
 
@@ -95,5 +96,22 @@ class DQNAgent:
         else:
             return Qs.argmax().item()
 
+class DoubleDQNAgent(DQNAgent):
+    def _learn(self, experiences: ExperienceBatch) -> None:
+        # use Q_local to select action, use Q_target to evaluate
+        states, actions, rewards, next_states, dones = experiences
+        _, next_actions = self.Q_local(next_states).detach().max(1,keepdim=True)
+        target_nexts = self.Q_target(next_states).gather(1, next_actions)
+        
+        targets = rewards + (1-dones) * GAMMA * target_nexts
+        currents = self.Q_local(states).gather(1, actions)
 
+        # gradient descent to minimize MSE loss between TD target and current
+        loss = torch.nn.functional.mse_loss(targets, currents)
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
 
+        # update target Q network 
+        if self.time_step % self.update_freq == 0:
+            self._update_Q_target()

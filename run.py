@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 
-from src.agents.agent import DQNAgent
+from src.agents.agent import DQNAgent, DoubleDQNAgent
 from src.utils.typing import List
 
 
@@ -59,7 +59,8 @@ if __name__ == "__main__":
     action_size = brain.vector_action_space_size
     state_size = len(env_info.vector_observations[0])
 
-    agent = DQNAgent(state_size, action_size)
+    # agent = DQNAgent(state_size, action_size)
+    agent = DoubleDQNAgent(state_size, action_size)
     scores = run(agent, env, num_episodes=2000)
 
     # plot the scores
