@@ -52,7 +52,7 @@ class FullyConnectedDuelingNetwork(nn.Module):
         a = self.network_A_head(base) # 1 x action_size
         v = self.network_V_head(base).expand_as(a) # 1 x 1 -> 1 x action_size
 
-        q = v + (a - a.sum(-1)/self.action_size)
+        q = v + (a - a.sum(-1, keepdim=True)/self.action_size)
 
         return q
 
