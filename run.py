@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import torch
 from unityagents import UnityEnvironment
 
-from src.agents.agent import DQN, DDQN, D3QN
+from src.agents.agent import DQN, DDQN, D3QN, PDDQN 
 from src.utils.typing import List
 from src.utils.util import Logger
 
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     action_size = brain.vector_action_space_size
     state_size = len(env_info.vector_observations[0])
 
-    algorithm = DQN
+    algorithm = PDDQN
     agent = algorithm(state_size, action_size)
 
     scores = run(agent, env, num_episodes=2000)

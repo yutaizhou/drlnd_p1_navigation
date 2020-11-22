@@ -79,15 +79,15 @@ class PrioritizedReplayBuffer(ReplayBuffer):
     
     @staticmethod
     def _priorities2probs(priorities, eps, alpha) -> ndarray:
-        logits = np.array(priorities + eps) ** alpha
-        probs = logits / logits.sums()
+        logits = (np.array(priorities) + eps) ** alpha
+        probs = logits / logits.sum()
         return probs
 
     @staticmethod
-    def _get_IS_weight(self, probs: ndarray, buffer_size: int, beta: float) -> ndarray:
+    def _get_IS_weight(probs: ndarray, buffer_size: int, beta: float) -> Tensor:
         IS_weight = (buffer_size * probs) ** -beta
         IS_weight /= IS_weight.max()
-        return IS_weight
+        return torch.from_numpy(IS_weight)
 
     def sample(self) -> Union[ExperienceBatch, Tensor, List[int]]:
         probs: ndarray = self._priorities2probs(self.priorities, self.eps, self.alpha)
@@ -102,6 +102,7 @@ class PrioritizedReplayBuffer(ReplayBuffer):
     def update_priorities(self, idc: List[int], td_errors: Tensor) -> None:
         td_errors.abs_()
         for idx, td_error in zip(idc, td_errors):
-            self.priorities[idx] = td_error
+            # error = td_error.abs_().detach().cpu()
+            self.priorities[idx] = td_error.item()
 
 

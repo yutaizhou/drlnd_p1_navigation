@@ -150,7 +150,7 @@ class PDDQN(DDQN):
     """
     def __init__(self,
                  state_size: int, action_size: int, 
-                 buffer_size: int = BUFFER_SIZE, alpha: float = 1, beta: float = 1,
+                 buffer_size: int = BUFFER_SIZE, alpha: float = 0.8, beta: float = 1,
                  hidden_dims: Sequence[int] = [64,64], update_freq: int = UPDATE_FREQ, 
                  lr: float = LR, batch_size: int = BATCH_SIZE, gamma:float = GAMMA,
                  seed: int = 42):
@@ -187,7 +187,7 @@ class PDDQN(DDQN):
         # gradient descent to minimize MSE loss between TD target and current
         td_errors = targets - currents
         self.td_errors = td_errors
-        loss = (td_errors * IS_weight).pow(2).mean()
+        loss = (td_errors.cpu() * IS_weight).pow(2).mean()
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
