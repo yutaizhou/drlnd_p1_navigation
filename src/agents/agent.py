@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 
-from .experience_replay import ReplayBuffer
+from .experience_replay import ReplayBuffer, PrioritizedReplayBuffer
 from .model import FullyConnectedNetwork, FullyConnectedDuelingNetwork
 from ..utils.typing import Sequence, ndarray, Tensor, ExperienceBatch
 from ..utils.util import DEVICE
@@ -27,7 +27,7 @@ class DQN:
         self.seed = seed   
         self.time_step: int = 0
 
-        # models, replabuffer, and optimizer
+        # models, replay buffer, and optimizer
         self.Q_target = FullyConnectedNetwork(state_size, action_size, hidden_dims).to(DEVICE)
         self.Q_local = FullyConnectedNetwork(state_size, action_size, hidden_dims).to(DEVICE)
         self.optimizer = torch.optim.Adam(self.Q_local.parameters(), lr=LR)
@@ -143,3 +143,58 @@ class D3QN(DDQN):
 
     def __str__(self) -> str:
         return 'D3QN'
+
+class PDDQN(DDQN):
+    """
+    Prioritized replay buffer + Double DQN: Same as DDQN but with PER instead of basic uniform sampling buffer
+    """
+    def __init__(self,
+                 state_size: int, action_size: int, 
+                 buffer_size: int = BUFFER_SIZE, alpha: float = 1, beta: float = 1,
+                 hidden_dims: Sequence[int] = [64,64], update_freq: int = UPDATE_FREQ, 
+                 lr: float = LR, batch_size: int = BATCH_SIZE, gamma:float = GAMMA,
+                 seed: int = 42):
+        super().__init__(state_size, action_size, buffer_size, hidden_dims, update_freq,\
+            lr, batch_size, gamma, seed)
+        self.buffer = PrioritizedReplayBuffer(int(buffer_size), batch_size, alpha, beta)
+        self.td_errors = torch.rand(self.batch_size)
+
+    def step(self,
+            state: ndarray, 
+            action: int, 
+            reward: float,
+            next_state: ndarray,
+            done: bool) -> None:
+        self.time_step += 1
+        if done: 
+            self._update_eps()
+        self.buffer.add(state, action, reward, next_state, done)
+        
+        if len(self.buffer) > self.batch_size:
+            experiences, IS_weight, idc = self.buffer.sample()
+            self._learn(experiences, IS_weight)
+            self.buffer.update_priorities(idc, self.td_errors)
+
+
+    def _learn(self, experiences: ExperienceBatch, IS_weight: Tensor) -> None:
+        # compute TD target, retrieve current TD values
+        states, actions, rewards, next_states, dones = experiences
+        target_nexts, _ = self.Q_target(next_states).detach().max(1,keepdim=True)
+        
+        targets = rewards + (1-dones) * GAMMA * target_nexts
+        currents = self.Q_local(states).gather(1, actions)
+
+        # gradient descent to minimize MSE loss between TD target and current
+        td_errors = targets - currents
+        self.td_errors = td_errors
+        loss = (td_errors * IS_weight).pow(2).mean()
+        self.optimizer.zero_grad()
+        loss.backward()
+        self.optimizer.step()
+
+        # update target Q network 
+        if self.time_step % self.update_freq == 0:
+            self._update_Q_target()
+
+    def __str__(self) -> str:
+        return 'PDDQN' 
