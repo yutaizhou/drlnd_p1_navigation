@@ -1,3 +1,4 @@
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import torch
@@ -59,6 +60,10 @@ def run(agent, env: UnityEnvironment, num_episodes=10000, is_training=True) -> L
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='This is a runner for DRLND Project 1: Navigation')
+    parser.add_argument('algorithm', type=str)
+    args = parser.parse_args()
+
     # set up env
     env = UnityEnvironment(file_name="src/envs/Banana_Linux_NoVis/Banana.x86_64")
     brain_name = env.brain_names[0]
@@ -68,7 +73,8 @@ if __name__ == "__main__":
     action_size = brain.vector_action_space_size
     state_size = len(env_info.vector_observations[0])
 
-    algorithm = PDDQN
+    algorithms = {'DQN': DQN, 'DDQN': DDQN, 'D3QN': D3QN, 'PDDQN': PDDQN}
+    algorithm = algorithms[args.algorithm]
     agent = algorithm(state_size, action_size)
 
     scores = run(agent, env, num_episodes=2000)

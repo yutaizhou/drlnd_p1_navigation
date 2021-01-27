@@ -1,0 +1,22 @@
+Progress for DQN agent
+Episode 100/2000 | Max Average Score: -inf
+Episode 200/2000 | Max Average Score: 1.16
+Episode 300/2000 | Max Average Score: 2.72
+Episode 400/2000 | Max Average Score: 3.85
+Episode 500/2000 | Max Average Score: 5.81
+Episode 600/2000 | Max Average Score: 7.47
+Episode 700/2000 | Max Average Score: 8.88
+Episode 800/2000 | Max Average Score: 9.26
+Episode 900/2000 | Max Average Score: 10.44
+Episode 1000/2000 | Max Average Score: 12.26
+Episode 1100/2000 | Max Average Score: 12.6
+Task solved in 1146 episodes, with average score over the last 100 episode: 13.05
+Episode 1200/2000 | Max Average Score: 13.4
+Episode 1300/2000 | Max Average Score: 13.4
+Episode 1400/2000 | Max Average Score: 13.4
+Episode 1500/2000 | Max Average Score: 13.4
+Episode 1600/2000 | Max Average Score: 13.42
+Episode 1700/2000 | Max Average Score: 13.42
+Episode 1800/2000 | Max Average Score: 13.42
+Episode 1900/2000 | Max Average Score: 13.42
+Episode 2000/2000 | Max Average Score: 13.42
